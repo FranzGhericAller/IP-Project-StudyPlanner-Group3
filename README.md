@@ -1,8 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+
 ## Getting Started
 
-First, run the development server:
+Make sure node and npm are installed in the local device
+
+node -v
+npm -v
+
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Second, run the development server:
 
 ```bash
 npm run dev
@@ -12,6 +24,8 @@ yarn dev
 pnpm dev
 # or
 bun dev
+#or (if there are Windows Security concerns)
+npx next dev --webpack
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
