@@ -34,6 +34,31 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+
+## Project Structure
+
+The project follows the Next.js App Router architecture, with separate directories for application pages, reusable components, API routes, business logic, and database management.
+
+```text
+IP-Project-StudyPlanner/
+├── app/                  # Pages, layouts, and API routes
+│   ├── (app)/            # Authenticated application pages
+│   ├── login/            # Login page
+│   └── api/              # API route handlers
+├── components/           # Reusable UI components
+├── lib/                  # Shared utilities and configuration
+├── services/              # Business logic and data operations
+├── prisma/                # Database schema and migrations
+├── storage/               # Local file uploads (gitignored)
+├── public/                # Static assets
+├── .env.example           # Environment variable template
+├── .gitignore
+├── package.json
+└── README.md
+```
+
+**Note:** The diagram general outline or the main directories and files. Some folders may contain additional nested files as development progresses.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

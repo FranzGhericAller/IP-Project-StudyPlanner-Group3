@@ -1,0 +1,250 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+
+enum Priority {
+  HIGH
+  MED   // matches your priorityStyles key "Med"
+  LOW
+}
+
+enum TaskStatus {
+  TODO
+  DONE
+}
+
+enum EventSource {
+  LOCAL
+  GCAL   // drives the blue "Synced GCal Event" look
+}
+
+enum ResourceProvider {
+  DRIVE
+  NOTION
+  LOCAL  // uploaded file stored on the server
+  LINK
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  ERROR
+}
+
+// ---------- Auth.js (field names follow the Auth.js Prisma adapter) ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?   @db.Text
+  passwordHash  String?   @db.VarChar(255) // null for Google-only accounts
+
+  // Settings page: toggles + timezone (change the default if needed)
+  timezone           String  @default("Asia/Manila")
+  emailNotifications Boolean @default(true)
+  darkMode           Boolean @default(false)
+  autoSync           Boolean @default(true)
+  autoSyncMinutes    Int     @default(15)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  subjects      Subject[]
+  tasks         Task[]
+  events        Event[]
+  studySessions StudySession[]
+  resources     Resource[]
+  syncStates    SyncState[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String? @db.Text
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// Unused while you use JWT sessions, but the adapter's types expect them.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ---------- App data ----------
+
+// Replaces the hardcoded event types (physics / exam / chemistry).
+// Store a color KEY ("emerald", "rose", ...), not Tailwind classes:
+// Tailwind only generates classes it can see written out in your code,
+// so keep a color-key -> classes map in lib/ and look it up.
+model Subject {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("blue") @db.VarChar(20)
+  createdAt DateTime @default(now())
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks         Task[]
+  events        Event[]
+  studySessions StudySession[]
+  resources     Resource[]
+
+  @@unique([userId, name])
+  @@map("subjects")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  userId      String
+  subjectId   String?
+  title       String
+  notes       String?    @db.Text
+  priority    Priority   @default(MED)
+  status      TaskStatus @default(TODO)
+  dueAt       DateTime?  @db.DateTime(3)
+  completedAt DateTime?  @db.DateTime(3)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject       Subject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  studySessions StudySession[]
+
+  @@index([userId, status, dueAt])
+  @@index([subjectId])
+  @@map("tasks")
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  userId           String
+  subjectId        String?
+  title            String
+  description      String?     @db.Text
+  startAt          DateTime    @db.DateTime(3)
+  endAt            DateTime    @db.DateTime(3)
+  allDay           Boolean     @default(false)
+  source           EventSource @default(LOCAL)
+
+  // Google Calendar sync fields (NULL for local events; MySQL allows many NULLs in a unique index)
+  googleCalendarId String?     @db.VarChar(255)
+  googleEventId    String?     @db.VarChar(255)
+  etag             String?
+  deletedAt        DateTime?   @db.DateTime(3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, googleCalendarId, googleEventId])
+  @@index([userId, startAt])
+  @@index([subjectId])
+  @@map("events")
+}
+
+model StudySession {
+  id          String    @id @default(cuid())
+  userId      String
+  subjectId   String?
+  taskId      String?
+  startedAt   DateTime  @db.DateTime(3)
+  endedAt     DateTime? @db.DateTime(3)
+  durationMin Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  task    Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@map("study_sessions")
+}
+
+model Resource {
+  id           String           @id @default(cuid())
+  userId       String
+  subjectId    String?
+  provider     ResourceProvider
+  title        String
+  url          String?          @db.Text
+  externalId   String?          // Drive file id / Notion page id
+
+  // Only filled for provider = LOCAL (uploaded files)
+  originalName String?
+  mimeType     String?
+  sizeBytes    Int?
+  storagePath  String?          @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, provider])
+  @@map("resources")
+}
+
+model SyncState {
+  id               String     @id @default(cuid())
+  userId           String
+  calendarId       String     @db.VarChar(255)
+  syncToken        String?    @db.Text
+  channelId        String?
+  channelResourceId String?   // needed to stop a Google watch channel
+  channelExpiresAt DateTime?  @db.DateTime(3)
+  lastSyncedAt     DateTime?  @db.DateTime(3)
+  status           SyncStatus @default(IDLE)
+  lastError        String?    @db.Text
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, calendarId])
+  @@map("sync_states")
+}
