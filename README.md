@@ -34,6 +34,19 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Setup Database Locally
+
+```bash
+#Local database: create an empty database in MySQL first, then apply your existing table history:
+  npx prisma migrate deploy
+  npx prisma generate
+#If the commands above complain about a missing database URL, either pass the file name each time:
+npx prisma generate --config prisma7.config.ts
+npx prisma migrate deploy --config prisma7.config.ts
+
+```
+
+
 
 ## Project Structure
 
