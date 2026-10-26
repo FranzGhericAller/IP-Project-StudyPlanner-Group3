@@ -55,11 +55,11 @@ The project follows the Next.js App Router architecture, with separate directori
 ```text
 IP-Project-StudyPlanner/
 ├── app/                  # Pages, layouts, and API routes
-│   ├── (app)/            # Authenticated application pages
-│   ├── login/            # Login page
-│   └── api/              # API route handlers
+│   ├── (app)/            # Authenticated application pages (Protected pages)
+│   ├── (auth)/           # Login page (Public Pages)
+│   └── api/              # API route handlers or server endpoints
 ├── components/           # Reusable UI components
-├── lib/                  # Shared utilities and configuration
+├── lib/                  # Shared utilities, configuration and logic
 ├── services/              # Business logic and data operations
 ├── prisma/                # Database schema and migrations
 ├── storage/               # Local file uploads (gitignored)
