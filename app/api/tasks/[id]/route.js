@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { taskSchema, taskStatusSchema } from "@/lib/validators/task";
+import { taskSchema, taskStatusSchema } from "@/lib/validators";
 import { getSubjectId } from "@/lib/subjects";
 import {
   getUserId,
@@ -9,12 +9,12 @@ import {
   notFound,
   validationError,
   serverError,
-} from "@/lib/api";
+} from "@/lib/apiHelpers";
 
-// Every query below has `userId` in its where clause, so a user can
-// only touch their own tasks even if they guess someone else's task id.
+// NOTE: every query here has userId in the "where", so you can only touch your own tasks
+// even if you guess someone else's id. count === 0 means not found (or not yours).
 
-// Mark a task done / not done
+// PATCH /api/tasks/:id: mark done / not done
 export async function PATCH(request, { params }) {
   const userId = await getUserId();
   if (!userId) return unauthorized();
@@ -40,7 +40,7 @@ export async function PATCH(request, { params }) {
   }
 }
 
-// Edit a task
+// PUT /api/tasks/:id: edit a task
 export async function PUT(request, { params }) {
   const userId = await getUserId();
   if (!userId) return unauthorized();
@@ -67,7 +67,7 @@ export async function PUT(request, { params }) {
   }
 }
 
-// Delete a task
+// DELETE /api/tasks/:id
 export async function DELETE(request, { params }) {
   const userId = await getUserId();
   if (!userId) return unauthorized();

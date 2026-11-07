@@ -1,6 +1,8 @@
 import Link from "next/link";
-export default function BackLink({ title }){
-  return(
+
+// top bar w/ "Back to Dashboard" + page title. children = extra stuff on the right (e.g. a button)
+export default function BackLink({ title, children }) {
+  return (
     <div className="flex items-center gap-4 bg-white border-b px-6 py-4">
       <Link
         href="/"
@@ -9,6 +11,7 @@ export default function BackLink({ title }){
         ← Back to Dashboard
       </Link>
       <h1 className="font-semibold text-lg">{title}</h1>
+      {children && <div className="ml-auto">{children}</div>}
     </div>
   );
 }

@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { inputClass } from "@/lib/ui";
 
-export default function PasswordInput({
-  id,
-  value,
-  onChange,
-  placeholder,
-  autoComplete,
-  error,
-}) {
+// pw input w/ a Show/Hide toggle
+export default function PasswordInput({ id, value, onChange, placeholder, autoComplete, error }) {
   const [show, setShow] = useState(false);
 
   return (
@@ -22,9 +17,7 @@ export default function PasswordInput({
         onChange={onChange}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className={`w-full border rounded-[10px] px-3 py-2 pr-16 text-sm placeholder:text-inksoft ${
-          error ? "border-rose-400" : ""
-        }`}
+        className={`${inputClass} pr-16 ${error ? "border-rose-400" : ""}`}
       />
       <button
         type="button"

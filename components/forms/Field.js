@@ -1,4 +1,4 @@
-// Label + input + error message wrapper.
+// label + input + error msg
 export default function Field({ label, htmlFor, error, children }) {
   return (
     <div className="mb-4">

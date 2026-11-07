@@ -1,88 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Study Planner
 
-
-## Getting Started
-
-Make sure node and npm are installed in the local device
-
-node -v
-npm -v
-
-First, install dependencies:
-
-```bash
-npm install
-```
-
-Second, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-#or (if there are Windows Security concerns)
-npx next dev --webpack
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Setup Database Locally
-
-```bash
-#Local database: create an empty database in MySQL first, then apply your existing table history:
-  npx prisma migrate deploy
-  npx prisma generate
-#If the commands above complain about a missing database URL, either pass the file name each time:
-npx prisma generate --config prisma7.config.ts
-npx prisma migrate deploy --config prisma7.config.ts
+A web app for planning a student's study week: tasks with priorities and due dates,
+calendar events, study time logging, and progress tracking.
+Built for our **Integrative Programming** project, with a focus on connecting the
+front end, our own REST API, and a MySQL database.
 
 ```
-
-
-
-## Project Structure
-
-The project follows the Next.js App Router architecture, with separate directories for application pages, reusable components, API routes, business logic, and database management.
-
-```text
-IP-Project-StudyPlanner/
-├── app/                  # Pages, layouts, and API routes
-│   ├── (app)/            # Authenticated application pages (Protected pages)
-│   ├── (auth)/           # Login page (Public Pages)
-│   └── api/              # API route handlers or server endpoints
-├── components/           # Reusable UI components
-├── lib/                  # Shared utilities, configuration and logic
-├── services/              # Business logic and data operations
-├── prisma/                # Database schema and migrations
-├── storage/               # Local file uploads (gitignored)
-├── public/                # Static assets
-├── .env.example           # Environment variable template
-├── .gitignore
-├── package.json
-└── README.md
+Browser (React pages)  -->  API routes (app/api)  -->  Prisma  -->  MySQL
 ```
 
-**Note:** The diagram general outline or the main directories and files. Some folders may contain additional nested files as development progresses.
+## Features
 
-## Learn More
+- Register, log in and log out (passwords saved as bcrypt hashes)
+- Add, edit, complete and delete tasks
+- Weekly and monthly calendar of due tasks and events
+- Add calendar events
+- Log study time and see progress
+- `GET /api/health` to check the database connection
 
-To learn more about Next.js, take a look at the following resources:
+Google login, Google Calendar sync, and the Resource Center are planned. Their screens are
+design previews and the database tables are already prepared. See
+[docs/1-project-overview.md](docs/1-project-overview.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Next.js 16, React 19, Tailwind CSS 4, Auth.js (NextAuth v5), Zod, Prisma 7, MySQL / MariaDB
 
-## Deploy on Vercel
+## Run it on your computer (Windows, macOS, Linux)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**You need:** Node.js 22 or 24 LTS (at least 20.19), Git, and MySQL or MariaDB
+(XAMPP is the easiest on Windows). Full step by step guide with fixes for common problems:
+**[docs/2-how-to-run.md](docs/2-how-to-run.md)**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Get the code and install packages**
+   ```bash
+   git clone https://github.com/FranzGhericAller/IP-Project-StudyPlanner-Group3.git
+   cd IP-Project-StudyPlanner-Group3
+   npm install
+   ```
+
+2. **Start MySQL and create an empty database named `studyplanner`**
+   (XAMPP: start MySQL, open phpMyAdmin, click New, name it `studyplanner`), or:
+   ```bash
+   mysql -u root -p -e "CREATE DATABASE studyplanner;"
+   ```
+
+3. **Create your `.env` file** from the example
+
+   | System | Command |
+   |--------|---------|
+   | Windows (PowerShell) | `Copy-Item .env.example .env` |
+   | macOS / Linux | `cp .env.example .env` |
+
+   Then open `.env` and set:
+   - `DATABASE_URL`, for XAMPP: `mysql://root:@localhost:3306/studyplanner`
+   - `AUTH_SECRET`, paste the output of:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+     ```
+
+4. **Create the tables**
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+5. **Start the app**
+   ```bash
+   npm run dev
+   ```
+   Open http://localhost:3000 and register an account.
+   Check http://localhost:3000/api/health, it should say `"ok": true`.
+
+## Project structure
+
+```
+app/
+  (auth)/      Login and register pages (logged-out users)
+  (app)/       Dashboard and other pages (logged-in users only)
+  api/         The REST API: health, register, auth, tasks, events, study-sessions
+components/    UI pieces, grouped into dashboard/, forms/, auth/ and common/
+lib/           Shared code: API helpers, validation rules, login setup, database client
+prisma/        Database design (schema.prisma) and migrations
+docs/          Project documentation
+```
+
+## Documentation
+
+| Document | What it covers |
+|----------|----------------|
+| [Project Overview](docs/1-project-overview.md) | What the app does and the technologies used |
+| [How to Run](docs/2-how-to-run.md) | Full setup for any device, and troubleshooting |
+| [How It Works](docs/3-how-it-works.md) | Request flow, login, security, folder guide |
+| [API Reference](docs/4-api-reference.md) | Every endpoint with examples |
+| [Database](docs/5-database.md) | Tables, relationships, migrations |
+| [Defense Guide](docs/6-defense-guide.md) | Demo plan and likely questions |
+
+## Scripts
+
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Start the app for development |
+| `npm run build` / `npm start` | Build and run the production version |
+| `npm run lint` | Check the code for mistakes |
+| `npm run db:deploy` | Apply database migrations |
+| `npm run db:studio` | Browse the database in the browser |

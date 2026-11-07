@@ -1,8 +1,8 @@
-// Shared two-panel layout for /login and /register.
+// 2 column layout shared by /login and /register
 export default function AuthLayout({ title, subtitle, children, footer }) {
   return (
-    <div className="min-h-screen grid md:grid-cols-2 bg-[#F6F7F9]">
-      {/* Left: brand panel (hidden on small screens) */}
+    <div className="min-h-screen grid md:grid-cols-2">
+      {/* left side, hidden on mobile */}
       <aside className="hidden md:flex flex-col justify-between bg-neutral-900 text-white p-10">
         <div className="text-lg font-semibold">Study Planner</div>
 
@@ -31,7 +31,7 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         <p className="text-xs text-neutral-500">Integrative Programming Project</p>
       </aside>
 
-      {/* Right: form */}
+      {/* right side: the form */}
       <main className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="md:hidden mb-6 text-center text-lg font-semibold">

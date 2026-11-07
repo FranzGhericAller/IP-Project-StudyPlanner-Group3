@@ -1,17 +1,15 @@
 "use client";
+
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import BackLink from "@/components/BackLink";
-import UserAvatar from "@/components/UserAvatar";
+import BackLink from "@/components/common/BackLink";
+import UserAvatar from "@/components/common/UserAvatar";
 
-const connectedAccounts =["Google Calendar", "Google Drive", "Notion"];
+const connectedAccounts = ["Google Calendar", "Google Drive", "Notion"];
 
-export default function Settings(){
-  const { data: session } = useSession();
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-  const [autoSync, setAutoSync] = useState(true);
-  const Toggle = ({ on, onClick }) =>(
+// on/off switch
+function Toggle({ on, onClick }) {
+  return (
     <button
       onClick={onClick}
       className={`h-6 w-11 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-neutral-300"}`}
@@ -23,8 +21,17 @@ export default function Settings(){
       />
     </button>
   );
-  return(
-    <div className="min-h-screen bg-[#F6F7F9]">
+}
+
+// TODO: save these settings to the db. right now the switches only change on screen
+export default function Settings() {
+  const { data: session } = useSession();
+  const [emailNotif, setEmailNotif] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [autoSync, setAutoSync] = useState(true);
+
+  return (
+    <div className="min-h-screen">
       <BackLink title="Profile & Settings" />
       <div className="flex justify-center pt-10 px-6">
         <div className="w-full max-w-md space-y-5">
@@ -35,12 +42,13 @@ export default function Settings(){
               <div className="text-sm text-inksoft">{session?.user?.email}</div>
             </div>
           </div>
+
           <div className="bg-white rounded-lg border p-5">
             <h2 className="font-semibold mb-3">Connected Accounts</h2>
             <ul className="space-y-3">
-              {connectedAccounts.map((acc) =>(
-                <li key={acc} className="flex items-center justify-between text-sm">
-                  <span>{acc}</span>
+              {connectedAccounts.map((name) => (
+                <li key={name} className="flex items-center justify-between text-sm">
+                  <span>{name}</span>
                   <span className="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
                     Connected
                   </span>
@@ -48,23 +56,25 @@ export default function Settings(){
               ))}
             </ul>
           </div>
+
           <div className="bg-white rounded-lg border p-5">
             <h2 className="font-semibold mb-3">Preferences</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
+            <div className="space-y-4 text-sm">
+              <div className="flex items-center justify-between">
                 <span>Email Notifications</span>
                 <Toggle on={emailNotif} onClick={() => setEmailNotif(!emailNotif)} />
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between">
                 <span>Dark Mode</span>
                 <Toggle on={darkMode} onClick={() => setDarkMode(!darkMode)} />
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between">
                 <span>Auto-sync every 15 min</span>
                 <Toggle on={autoSync} onClick={() => setAutoSync(!autoSync)} />
               </div>
             </div>
           </div>
+
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="w-full text-left px-4 py-2.5 rounded-md bg-rose-100 text-rose-700 text-sm font-medium hover:bg-rose-200"

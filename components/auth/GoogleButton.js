@@ -11,7 +11,7 @@ function GoogleIcon() {
   );
 }
 
-// onClick is a placeholder for now; we connect it to Google sign-in later.
+// TODO: connect to Google login. for now onClick just shows a "not connected yet" msg
 export default function GoogleButton({ label = "Continue with Google", onClick }) {
   return (
     <button

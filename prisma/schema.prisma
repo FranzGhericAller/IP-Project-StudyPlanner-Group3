@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// DB design for the Study Planner. each model = 1 MySQL table
+// after editing this run: npx prisma migrate dev --name what_changed
 
 generator client {
   provider = "prisma-client"
@@ -13,7 +13,7 @@ datasource db {
 
 enum Priority {
   HIGH
-  MED   // matches your priorityStyles key "Med"
+  MED
   LOW
 }
 
@@ -24,13 +24,13 @@ enum TaskStatus {
 
 enum EventSource {
   LOCAL
-  GCAL   // drives the blue "Synced GCal Event" look
+  GCAL   // synced from Google Calendar (planned)
 }
 
 enum ResourceProvider {
   DRIVE
   NOTION
-  LOCAL  // uploaded file stored on the server
+  LOCAL  // uploaded file (planned)
   LINK
 }
 
@@ -40,7 +40,7 @@ enum SyncStatus {
   ERROR
 }
 
-// ---------- Auth.js (field names follow the Auth.js Prisma adapter) ----------
+// ---------- auth tables (field names follow the Auth.js adapter) ----------
 
 model User {
   id            String    @id @default(cuid())
@@ -50,7 +50,7 @@ model User {
   image         String?   @db.Text
   passwordHash  String?   @db.VarChar(255) // null for Google-only accounts
 
-  // Settings page: toggles + timezone (change the default if needed)
+  // settings page stuff (not saved from the page yet)
   timezone           String  @default("Asia/Manila")
   emailNotifications Boolean @default(true)
   darkMode           Boolean @default(false)
@@ -93,7 +93,7 @@ model Account {
   @@map("accounts")
 }
 
-// Unused while you use JWT sessions, but the adapter's types expect them.
+// not used since we use JWT, but Auth.js expects these to exist
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -115,12 +115,9 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// ---------- App data ----------
+// ---------- app data ----------
 
-// Replaces the hardcoded event types (physics / exam / chemistry).
-// Store a color KEY ("emerald", "rose", ...), not Tailwind classes:
-// Tailwind only generates classes it can see written out in your code,
-// so keep a color-key -> classes map in lib/ and look it up.
+// e.g. "Web Dev". gets created automatically when typed in a form
 model Subject {
   id        String   @id @default(cuid())
   userId    String
@@ -160,6 +157,7 @@ model Task {
   @@map("tasks")
 }
 
+// source: LOCAL = added in the app, GCAL = from Google (later)
 model Event {
   id               String      @id @default(cuid())
   userId           String
@@ -189,6 +187,7 @@ model Event {
   @@map("events")
 }
 
+// logged study time, can be linked to a task
 model StudySession {
   id          String    @id @default(cuid())
   userId      String
@@ -207,6 +206,7 @@ model StudySession {
   @@map("study_sessions")
 }
 
+// for the Resource Center (not used yet)
 model Resource {
   id           String           @id @default(cuid())
   userId       String
@@ -231,6 +231,7 @@ model Resource {
   @@map("resources")
 }
 
+// for Google Calendar sync (not used yet)
 model SyncState {
   id               String     @id @default(cuid())
   userId           String

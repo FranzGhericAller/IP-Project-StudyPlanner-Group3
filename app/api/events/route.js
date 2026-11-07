@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { eventSchema } from "@/lib/validators/event";
+import { eventSchema } from "@/lib/validators";
 import { getSubjectId } from "@/lib/subjects";
 import {
   getUserId,
@@ -8,9 +8,26 @@ import {
   badRequest,
   validationError,
   serverError,
-} from "@/lib/api";
+} from "@/lib/apiHelpers";
 
-// Create a local calendar event
+// GET /api/events: all my events, earliest first
+export async function GET() {
+  const userId = await getUserId();
+  if (!userId) return unauthorized();
+
+  try {
+    const events = await prisma.event.findMany({
+      where: { userId, deletedAt: null },
+      orderBy: { startAt: "asc" },
+    });
+    return Response.json({ events });
+  } catch (e) {
+    console.error("List events failed:", e);
+    return serverError();
+  }
+}
+
+// POST /api/events: add an event
 export async function POST(request) {
   const userId = await getUserId();
   if (!userId) return unauthorized();
@@ -32,7 +49,7 @@ export async function POST(request) {
         description: description || null,
         startAt,
         endAt,
-        source: "LOCAL",
+        source: "LOCAL", // made in the app (GCAL is for Google synced ones later)
       },
     });
     return Response.json({ ok: true, event }, { status: 201 });

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { studySchema } from "@/lib/validators/study";
+import { studySchema } from "@/lib/validators";
 import { getSubjectId } from "@/lib/subjects";
 import {
   getUserId,
@@ -8,9 +8,9 @@ import {
   badRequest,
   validationError,
   serverError,
-} from "@/lib/api";
+} from "@/lib/apiHelpers";
 
-// Log study time
+// POST /api/study-sessions: log study time
 export async function POST(request) {
   const userId = await getUserId();
   if (!userId) return unauthorized();
@@ -21,23 +21,22 @@ export async function POST(request) {
   const parsed = studySchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error);
   const { minutes, subject, taskId } = parsed.data;
+
+  // no start time = just finished studying now
   const startedAt = parsed.data.startedAt ?? new Date();
   const endedAt = new Date(startedAt.getTime() + minutes * 60 * 1000);
 
   try {
-    // If a task was picked, make sure it belongs to this user.
+    // if a task was picked, make sure it's actually this user's task
     let task = null;
     if (taskId) {
-      task = await prisma.task.findFirst({
-        where: { id: taskId, userId },
-        select: { id: true, subjectId: true },
-      });
+      task = await prisma.task.findFirst({ where: { id: taskId, userId } });
       if (!task) {
         return Response.json({ errors: { taskId: "Task not found." } }, { status: 400 });
       }
     }
 
-    // A typed subject wins; otherwise use the task's subject.
+    // typed subject wins, otherwise use the task's subject
     const subjectId = subject
       ? await getSubjectId(userId, subject)
       : task?.subjectId ?? null;

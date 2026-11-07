@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { taskSchema } from "@/lib/validators/task";
+import { taskSchema } from "@/lib/validators";
 import { getSubjectId } from "@/lib/subjects";
 import {
   getUserId,
@@ -8,9 +8,27 @@ import {
   badRequest,
   validationError,
   serverError,
-} from "@/lib/api";
+} from "@/lib/apiHelpers";
 
-// Create a task
+// GET /api/tasks: all my tasks, newest first
+export async function GET() {
+  const userId = await getUserId();
+  if (!userId) return unauthorized();
+
+  try {
+    const tasks = await prisma.task.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: { subject: { select: { name: true } } },
+    });
+    return Response.json({ tasks });
+  } catch (e) {
+    console.error("List tasks failed:", e);
+    return serverError();
+  }
+}
+
+// POST /api/tasks: add a task
 export async function POST(request) {
   const userId = await getUserId();
   if (!userId) return unauthorized();

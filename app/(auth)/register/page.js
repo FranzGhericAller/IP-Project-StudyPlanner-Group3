@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import AuthLayout from "@/components/auth/AuthLayout";
-import Field from "@/components/auth/Field";
-import PasswordInput from "@/components/auth/PasswordInput";
 import GoogleButton from "@/components/auth/GoogleButton";
-
-const inputClass =
-  "w-full border rounded-[10px] px-3 py-2 text-sm placeholder:text-inksoft";
+import PasswordInput from "@/components/auth/PasswordInput";
+import Field from "@/components/forms/Field";
+import Alert from "@/components/common/Alert";
+import { callApi } from "@/lib/callApi";
+import { inputClass } from "@/lib/ui";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -24,60 +24,50 @@ export default function RegisterPage() {
     return (e) => setForm({ ...form, [field]: e.target.value });
   }
 
+  // quick checks here, the API checks again w/ zod
   function validate() {
-    const next = {};
-    if (!form.name.trim()) next.name = "Name is required.";
-    if (!form.email.trim()) next.email = "Email is required.";
-    else if (!/^\S+@\S+\.\S+$/.test(form.email)) next.email = "Enter a valid email address.";
-    if (form.password.length < 8) next.password = "Use at least 8 characters.";
-    if (form.confirm !== form.password) next.confirm = "Passwords don't match.";
-    return next;
+    const found = {};
+    if (!form.name.trim()) found.name = "Name is required.";
+    if (!form.email.trim()) found.email = "Email is required.";
+    else if (!/^\S+@\S+\.\S+$/.test(form.email)) found.email = "Enter a valid email address.";
+    if (form.password.length < 8) found.password = "Use at least 8 characters.";
+    if (form.confirm !== form.password) found.confirm = "Passwords don't match.";
+    return found;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const next = validate();
-    setErrors(next);
+    const found = validate();
+    setErrors(found);
     setFormError("");
     setNotice("");
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(found).length > 0) return;
 
     setLoading(true);
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        if (data.errors) setErrors(data.errors);
-        else setFormError(data.message || "Something went wrong. Try again.");
-        return;
-      }
-
-      // Account created: log in right away.
-      const login = await signIn("credentials", {
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-        redirect: false,
-      });
-      if (login?.error) {
-        router.push("/login");
-        return;
-      }
-      router.push("/");
-      router.refresh();
-    } catch {
-      setFormError("Could not reach the server. Try again.");
-    } finally {
+    // create the account first
+    const { ok, data } = await callApi("/api/register", "POST", {
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    });
+    if (!ok) {
       setLoading(false);
+      if (data.errors) setErrors(data.errors);
+      else setFormError(data.message || "Something went wrong. Try again.");
+      return;
     }
+
+    // then log in right away w/ the same email + pw
+    const login = await signIn("credentials", {
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      redirect: false,
+    });
+    setLoading(false);
+
+    router.push(login?.error ? "/login" : "/");
+    router.refresh();
   }
 
   return (
@@ -153,16 +143,8 @@ export default function RegisterPage() {
           />
         </Field>
 
-        {formError && (
-          <div className="mb-4 rounded-md bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-700">
-            {formError}
-          </div>
-        )}
-        {notice && (
-          <div className="mb-4 rounded-md bg-blue-50 border border-blue-100 px-3 py-2 text-sm text-blue-700">
-            {notice}
-          </div>
-        )}
+        <Alert>{formError}</Alert>
+        <Alert type="info">{notice}</Alert>
 
         <button
           type="submit"

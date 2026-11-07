@@ -2,7 +2,8 @@
 
 import { useSession } from "next-auth/react";
 
-// Pass a size class written out in full, e.g. size="h-12 w-12".
+// profile pic if there's one, otherwise the first letter of the name.
+// pass the full size class, e.g. size="h-12 w-12"
 export default function UserAvatar({ size = "h-8 w-8" }) {
   const { data: session } = useSession();
   const user = session?.user;
