@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { inputClass } from "@/lib/ui";
 
-// pw input w/ a Show/Hide toggle
 export default function PasswordInput({ id, value, onChange, placeholder, autoComplete, error }) {
   const [show, setShow] = useState(false);
 
@@ -17,7 +16,7 @@ export default function PasswordInput({ id, value, onChange, placeholder, autoCo
         onChange={onChange}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className={`${inputClass} pr-16 ${error ? "border-rose-400" : ""}`}
+        className={`${inputClass} pr-16 ${error ? "border-rose-400 dark:border-rose-500" : ""}`}
       />
       <button
         type="button"

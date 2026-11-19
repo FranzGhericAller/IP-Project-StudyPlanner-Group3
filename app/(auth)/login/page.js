@@ -20,7 +20,6 @@ export default function LoginPage() {
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // quick checks before sending anything
   function validate() {
     const found = {};
     if (!email.trim()) found.email = "Email is required.";
@@ -37,7 +36,6 @@ export default function LoginPage() {
     setNotice("");
     if (Object.keys(found).length > 0) return;
 
-    // signIn() sends email + pw to Auth.js, see authorize() in lib/auth.js
     setLoading(true);
     const res = await signIn("credentials", {
       email: email.trim().toLowerCase(),
@@ -61,7 +59,7 @@ export default function LoginPage() {
       footer={
         <>
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
+          <Link href="/register" className="text-blue-600 dark:text-blue-400 hover:underline">
             Register
           </Link>
         </>
@@ -70,9 +68,9 @@ export default function LoginPage() {
       <GoogleButton onClick={() => signIn("google", { callbackUrl: "/" })} />
 
       <div className="my-5 flex items-center gap-3 text-xs text-inksoft">
-        <span className="h-px flex-1 bg-neutral-200" />
+        <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
         or sign in with email
-        <span className="h-px flex-1 bg-neutral-200" />
+        <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
@@ -85,7 +83,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@school.edu"
-            className={`${inputClass} ${errors.email ? "border-rose-400" : ""}`}
+            className={`${inputClass} ${errors.email ? "border-rose-400 dark:border-rose-500" : ""}`}
           />
         </Field>
 
@@ -106,7 +104,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-blue-700 text-white px-4 py-2.5 text-sm font-medium hover:bg-blue-800 disabled:opacity-60"
+          className="w-full rounded-md bg-blue-700 dark:bg-blue-600 text-white px-4 py-2.5 text-sm font-medium hover:bg-blue-800 dark:hover:bg-blue-700 disabled:opacity-60"
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>

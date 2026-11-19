@@ -1,4 +1,3 @@
-// label + input + error msg
 export default function Field({ label, htmlFor, error, children }) {
   return (
     <div className="mb-4">
@@ -6,7 +5,7 @@ export default function Field({ label, htmlFor, error, children }) {
         {label}
       </label>
       {children}
-      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{error}</p>}
     </div>
   );
 }

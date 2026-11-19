@@ -24,7 +24,6 @@ export default function RegisterPage() {
     return (e) => setForm({ ...form, [field]: e.target.value });
   }
 
-  // quick checks here, the API checks again w/ zod
   function validate() {
     const found = {};
     if (!form.name.trim()) found.name = "Name is required.";
@@ -45,7 +44,6 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    // create the account first
     const { ok, data } = await callApi("/api/register", "POST", {
       name: form.name,
       email: form.email,
@@ -58,7 +56,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // then log in right away w/ the same email + pw
     const login = await signIn("credentials", {
       email: form.email.trim().toLowerCase(),
       password: form.password,
@@ -77,7 +74,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:underline">
             Sign in
           </Link>
         </>
@@ -89,9 +86,9 @@ export default function RegisterPage() {
       />
 
       <div className="my-5 flex items-center gap-3 text-xs text-inksoft">
-        <span className="h-px flex-1 bg-neutral-200" />
+        <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
         or register with email
-        <span className="h-px flex-1 bg-neutral-200" />
+        <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
@@ -104,7 +101,7 @@ export default function RegisterPage() {
             value={form.name}
             onChange={update("name")}
             placeholder="Juan Dela Cruz"
-            className={`${inputClass} ${errors.name ? "border-rose-400" : ""}`}
+            className={`${inputClass} ${errors.name ? "border-rose-400 dark:border-rose-500" : ""}`}
           />
         </Field>
 
@@ -117,7 +114,7 @@ export default function RegisterPage() {
             value={form.email}
             onChange={update("email")}
             placeholder="you@school.edu"
-            className={`${inputClass} ${errors.email ? "border-rose-400" : ""}`}
+            className={`${inputClass} ${errors.email ? "border-rose-400 dark:border-rose-500" : ""}`}
           />
         </Field>
 
@@ -149,7 +146,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-blue-700 text-white px-4 py-2.5 text-sm font-medium hover:bg-blue-800 disabled:opacity-60"
+          className="w-full rounded-md bg-blue-700 dark:bg-blue-600 text-white px-4 py-2.5 text-sm font-medium hover:bg-blue-800 dark:hover:bg-blue-700 disabled:opacity-60"
         >
           {loading ? "Creating account..." : "Create account"}
         </button>

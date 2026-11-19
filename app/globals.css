@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* Tailwind 4 only creates classes like text-ink / text-inksoft
-   for colors declared inside @theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-ink: #1F2937;
   --color-inksoft: #5B6472;
@@ -9,6 +9,12 @@
 
 :root {
   --background: #F6F7F9;
+}
+
+.dark {
+  --background: #0B0F17;
+  --color-ink: #F3F4F6;
+  --color-inksoft: #9CA3AF;
 }
 
 body {

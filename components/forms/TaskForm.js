@@ -7,7 +7,6 @@ import Field from "@/components/forms/Field";
 import { callApi } from "@/lib/callApi";
 import { inputClass, priorityLabels, priorityStyles } from "@/lib/ui";
 
-// ISO date -> "2026-10-25T09:00" (local time), the format datetime-local inputs need
 function toLocalInput(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -15,7 +14,6 @@ function toLocalInput(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// Add task (no props) or Edit task (taskId + initial values)
 export default function TaskForm({ taskId, initial }) {
   const editing = Boolean(taskId);
   const router = useRouter();
@@ -45,14 +43,12 @@ export default function TaskForm({ taskId, initial }) {
       return;
     }
 
-    // edit = PUT /api/tasks/:id, add = POST /api/tasks
     setLoading(true);
     const { ok, data } = await callApi(
       editing ? `/api/tasks/${taskId}` : "/api/tasks",
       editing ? "PUT" : "POST",
       {
         ...form,
-        // datetime-local has no timezone, so convert to ISO here in the browser
         dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : "",
       }
     );
@@ -82,7 +78,7 @@ export default function TaskForm({ taskId, initial }) {
           value={form.title}
           onChange={update("title")}
           placeholder="e.g. Exam Preparation"
-          className={`${inputClass} ${errors.title ? "border-rose-400" : ""}`}
+          className={`${inputClass} ${errors.title ? "border-rose-400 dark:border-rose-500" : ""}`}
         />
       </Field>
 
@@ -102,8 +98,8 @@ export default function TaskForm({ taskId, initial }) {
           type="datetime-local"
           value={form.dueAt}
           onChange={update("dueAt")}
-          suppressHydrationWarning // server and browser timezones can differ
-          className={`${inputClass} ${errors.dueAt ? "border-rose-400" : ""}`}
+          suppressHydrationWarning
+          className={`${inputClass} dark:[color-scheme:dark] ${errors.dueAt ? "border-rose-400 dark:border-rose-500" : ""}`}
         />
       </Field>
 
@@ -118,7 +114,9 @@ export default function TaskForm({ taskId, initial }) {
               type="button"
               onClick={() => setForm({ ...form, priority: p })}
               className={`text-xs px-3 py-1.5 rounded-full border ${style.bg} ${style.text} ${
-                selected ? `${style.border} ring-2 ring-offset-1` : "border-transparent"
+                selected
+                  ? `${style.border} ring-2 ring-offset-1 dark:ring-offset-neutral-900`
+                  : "border-transparent"
               }`}
             >
               {priorityLabels[p]}

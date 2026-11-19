@@ -1,9 +1,7 @@
-// 2 column layout shared by /login and /register
 export default function AuthLayout({ title, subtitle, children, footer }) {
   return (
     <div className="min-h-screen grid md:grid-cols-2">
-      {/* left side, hidden on mobile */}
-      <aside className="hidden md:flex flex-col justify-between bg-neutral-900 text-white p-10">
+      <aside className="hidden md:flex flex-col justify-between bg-neutral-900 dark:bg-neutral-950 dark:border-r dark:border-neutral-800 text-white p-10">
         <div className="text-lg font-semibold">Study Planner</div>
 
         <div>
@@ -27,14 +25,13 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         <p className="text-xs text-neutral-500">Integrative Programming Project</p>
       </aside>
 
-      {/* right side: the form */}
       <main className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="md:hidden mb-6 text-center text-lg font-semibold">
             Study Planner
           </div>
 
-          <div className="bg-white rounded-lg border p-8">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-8">
             <h1 className="text-xl font-semibold">{title}</h1>
             <p className="mt-1 mb-6 text-sm text-inksoft">{subtitle}</p>
             {children}

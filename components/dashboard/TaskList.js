@@ -8,8 +8,6 @@ import Alert from "@/components/common/Alert";
 import { callApi } from "@/lib/callApi";
 import { inputClass, priorityLabels, priorityStyles } from "@/lib/ui";
 
-
-// "Nov 20" + whether it's already past (before today)
 function dueInfo(iso) {
   if (!iso) return null;
   const d = new Date(iso);
@@ -19,12 +17,10 @@ function dueInfo(iso) {
   };
 }
 
-// one task row. done = shown inside the Completed section
 function Row({ task, done, busy, onToggle, onDelete, onOpen }) {
   const due = dueInfo(task.dueAt);
   return (
     <li className={`flex items-center gap-2 text-sm ${busy ? "opacity-50" : ""}`}>
-      {/* circle = priority color. click to mark done (or reopen in Completed) */}
       <button
         type="button"
         onClick={() => onToggle(task)}
@@ -36,15 +32,14 @@ function Row({ task, done, busy, onToggle, onDelete, onOpen }) {
             : `${priorityLabels[task.priority]} priority. Click to mark as done.`
         }
         className={`h-4 w-4 shrink-0 rounded-full border-2 ${priorityStyles[task.priority].border} ${
-          done ? "bg-neutral-300" : ""
+          done ? "bg-neutral-300 dark:bg-neutral-600" : ""
         }`}
       />
-      {/* click the name to open the details panel */}
       <button
         type="button"
         onClick={() => onOpen?.(task)}
         title="Open details"
-        className="min-w-0 flex-1 text-left hover:text-blue-700"
+        className="min-w-0 flex-1 text-left hover:text-blue-700 dark:hover:text-blue-400"
       >
         <span className={`flex items-center gap-1.5 ${done ? "text-inksoft line-through" : ""}`}>
           <span className="truncate">{task.name}</span>
@@ -54,7 +49,10 @@ function Row({ task, done, busy, onToggle, onDelete, onOpen }) {
           <span className="flex gap-1 text-xs text-inksoft">
             {task.subject && <span className="truncate">{task.subject}</span>}
             {due && !done && (
-              <span suppressHydrationWarning className={due.overdue ? "text-rose-600" : ""}>
+              <span
+                suppressHydrationWarning
+                className={due.overdue ? "text-rose-600 dark:text-rose-400" : ""}
+              >
                 {task.subject ? "· " : ""}Due {due.text}
               </span>
             )}
@@ -65,7 +63,7 @@ function Row({ task, done, busy, onToggle, onDelete, onOpen }) {
         href={`/tasks/${task.id}/edit`}
         aria-label={`Edit ${task.name}`}
         title="Edit"
-        className="text-inksoft hover:text-blue-600"
+        className="text-inksoft hover:text-blue-600 dark:hover:text-blue-400"
       >
         ✎
       </Link>
@@ -75,7 +73,7 @@ function Row({ task, done, busy, onToggle, onDelete, onOpen }) {
         disabled={busy}
         aria-label={`Delete ${task.name}`}
         title="Delete"
-        className="text-inksoft hover:text-rose-600"
+        className="text-inksoft hover:text-rose-600 dark:hover:text-rose-400"
       >
         ✕
       </button>
@@ -83,20 +81,17 @@ function Row({ task, done, busy, onToggle, onDelete, onOpen }) {
   );
 }
 
-// "Task Manager" box in the sidebar: open tasks + a collapsible Completed section.
-// After each change we call router.refresh() so the page reloads the data from the db.
 export default function TaskList({ tasks, completedTasks = [], onOpen }) {
   const router = useRouter();
   const [newTitle, setNewTitle] = useState("");
   const [adding, setAdding] = useState(false);
-  const [busyId, setBusyId] = useState(null); // task that's currently saving
+  const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
-  const [undo, setUndo] = useState(null); // { id, name } of the task just completed
+  const [undo, setUndo] = useState(null);
   const undoTimer = useRef(null);
 
   useEffect(() => () => clearTimeout(undoTimer.current), []);
 
-  // quick add: type a title + Enter
   async function addTask(e) {
     e.preventDefault();
     const title = newTitle.trim();
@@ -121,7 +116,6 @@ export default function TaskList({ tasks, completedTasks = [], onOpen }) {
     undoTimer.current = setTimeout(() => setUndo(null), 6000);
   }
 
-  // set a task to DONE or back to TODO
   async function setStatus(task, status) {
     setBusyId(task.id);
     setError("");
@@ -189,7 +183,7 @@ export default function TaskList({ tasks, completedTasks = [], onOpen }) {
       {undo && (
         <div
           role="status"
-          className="mb-3 flex items-center justify-between gap-2 rounded-md bg-neutral-900 px-3 py-2 text-xs text-white"
+          className="mb-3 flex items-center justify-between gap-2 rounded-md bg-neutral-900 dark:bg-neutral-800 px-3 py-2 text-xs text-white"
         >
           <span className="min-w-0 truncate">Completed &quot;{undo.name}&quot;</span>
           <button
@@ -222,7 +216,7 @@ export default function TaskList({ tasks, completedTasks = [], onOpen }) {
 
       <Link
         href="/tasks/new"
-        className="block mt-3 text-center text-sm border rounded-[10px] py-1.5 text-inksoft hover:bg-neutral-50"
+        className="block mt-3 text-center text-sm border border-neutral-300 dark:border-neutral-700 rounded-[10px] py-1.5 text-inksoft hover:bg-neutral-50 dark:hover:bg-neutral-800"
       >
         + Add Task
       </Link>

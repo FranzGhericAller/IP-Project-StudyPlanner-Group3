@@ -11,13 +11,12 @@ function GoogleIcon() {
   );
 }
 
-// TODO: connect to Google login. for now onClick just shows a "not connected yet" msg
 export default function GoogleButton({ label = "Continue with Google", onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-3 rounded-md border px-4 py-2.5 text-sm font-medium hover:bg-neutral-50"
+      className="w-full flex items-center justify-center gap-3 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2.5 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-700"
     >
       <GoogleIcon />
       {label}

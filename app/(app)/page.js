@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Dashboard from "@/components/dashboard/Dashboard";
+import { resourceSelect } from "@/lib/resources";
 
 export const dynamic = "force-dynamic"; // always fresh data, no caching
 
@@ -23,7 +24,7 @@ export default async function DashboardPage() {
   const to = new Date(now.getTime() + 180 * DAY);
 
   // run all queries at once
-  const [openTasks, doneTasks, total, completed, upcoming, studyTotal, dueTasks, events] =
+  const [openTasks, doneTasks, total, completed, upcoming, studyTotal, dueTasks, events, recentRows, resourceCount, studyRows] =
     await Promise.all([
       // sidebar list (sorted below)
       prisma.task.findMany({
@@ -51,6 +52,27 @@ export default async function DashboardPage() {
       prisma.event.findMany({
         where: { userId, deletedAt: null, startAt: { gte: from, lte: to } },
       }),
+      prisma.resource.findMany({
+        where: { userId, OR: [{ eventId: null }, { event: { deletedAt: null } }] },
+        orderBy: { createdAt: "desc" },
+        take: 4,
+        select: resourceSelect,
+      }),
+      prisma.resource.count({
+        where: { userId, OR: [{ eventId: null }, { event: { deletedAt: null } }] },
+      }),
+      prisma.studySession.findMany({
+        where: { userId, endedAt: { not: null }, startedAt: { gte: from, lte: to } },
+        orderBy: { startedAt: "desc" },
+        take: 300,
+        select: {
+          id: true,
+          startedAt: true,
+          durationMin: true,
+          task: { select: { title: true } },
+          subject: { select: { name: true } },
+        },
+      }),
     ]);
 
   // soonest due date first, tasks without a due date after those (newest first)
@@ -72,6 +94,13 @@ export default async function DashboardPage() {
 
   const tasks = sortedOpen.slice(0, 30).map(toItem);
   const completedTasks = doneTasks.map(toItem);
+
+  const recentResources = recentRows.map((r) => ({
+    id: r.id,
+    provider: r.provider,
+    title: r.title,
+    url: r.url,
+  }));
 
   const stats = {
     total,
@@ -101,6 +130,14 @@ export default async function DashboardPage() {
       at: e.startAt.toISOString(),
       linked: Boolean(e.googleEventId),
     })),
+        ...studyRows.map((s) => ({
+      id: `study-${s.id}`,
+      refId: s.id,
+      kind: "study",
+      title: s.task?.title ?? s.subject?.name ?? "Study session",
+      at: s.startedAt.toISOString(),
+      minutes: s.durationMin,
+    })),
   ];
 
   return (
@@ -109,6 +146,8 @@ export default async function DashboardPage() {
       completedTasks={completedTasks}
       stats={stats}
       calendarItems={calendarItems}
+      recentResources={recentResources}
+      resourceCount={resourceCount}
     />
   );
 }

@@ -7,7 +7,6 @@ import Field from "@/components/forms/Field";
 import { callApi } from "@/lib/callApi";
 import { inputClass } from "@/lib/ui";
 
-// ISO date -> "2026-10-25T09:00" (local time), the format datetime-local inputs need
 function toLocalInput(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -15,8 +14,6 @@ function toLocalInput(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// Add event (no props) or Edit event (eventId + initial values)
-// linked = this event also exists in Google Calendar, allDay = Google all-day event
 export default function EventForm({ eventId, initial, linked = false, allDay = false }) {
   const editing = Boolean(eventId);
   const router = useRouter();
@@ -37,7 +34,6 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
     return (e) => setForm({ ...form, [field]: e.target.value });
   }
 
-  // quick checks here, the API checks again w/ zod
   function validate() {
     const found = {};
     if (!form.title.trim()) found.title = "Title is required.";
@@ -56,7 +52,6 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
     setFormError("");
     if (Object.keys(found).length > 0) return;
 
-    // edit = PUT /api/events/:id, add = POST /api/events
     setLoading(true);
     const { ok, data } = await callApi(
       editing ? `/api/events/${eventId}` : "/api/events",
@@ -65,7 +60,6 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
         title: form.title,
         subject: form.subject,
         description: form.description,
-        // datetime-local has no timezone, so convert to ISO here in the browser
         startAt: new Date(form.startAt).toISOString(),
         endAt: new Date(form.endAt).toISOString(),
       }
@@ -108,13 +102,13 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
       submitLabel={editing ? "Save Changes" : "Save Event"}
     >
       {editing && allDay && (
-        <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <p className="mb-4 rounded-md bg-amber-50 dark:bg-amber-950/70 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
           This is an all-day event from Google Calendar. Changes made here are saved in the planner
           only and are not sent to Google.
         </p>
       )}
       {editing && linked && !allDay && (
-        <p className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        <p className="mb-4 rounded-md bg-blue-50 dark:bg-blue-950/70 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
           This event is linked to Google Calendar. Saving also updates it there.
         </p>
       )}
@@ -125,7 +119,7 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
           value={form.title}
           onChange={update("title")}
           placeholder="e.g. Midterm Exam"
-          className={`${inputClass} ${errors.title ? "border-rose-400" : ""}`}
+          className={`${inputClass} ${errors.title ? "border-rose-400 dark:border-rose-500" : ""}`}
         />
       </Field>
 
@@ -145,8 +139,8 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
           type="datetime-local"
           value={form.startAt}
           onChange={update("startAt")}
-          suppressHydrationWarning // server and browser timezones can differ
-          className={`${inputClass} ${errors.startAt ? "border-rose-400" : ""}`}
+          suppressHydrationWarning
+          className={`${inputClass} dark:[color-scheme:dark] ${errors.startAt ? "border-rose-400 dark:border-rose-500" : ""}`}
         />
       </Field>
 
@@ -157,7 +151,7 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
           value={form.endAt}
           onChange={update("endAt")}
           suppressHydrationWarning
-          className={`${inputClass} ${errors.endAt ? "border-rose-400" : ""}`}
+          className={`${inputClass} dark:[color-scheme:dark] ${errors.endAt ? "border-rose-400 dark:border-rose-500" : ""}`}
         />
       </Field>
 
@@ -173,14 +167,21 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
       </Field>
 
       {editing && (
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleting || loading}
-          className="mt-2 w-full rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-60"
-        >
-          {deleting ? "Deleting..." : "Delete event"}
-        </button>
+        <div className="mt-8 border-t border-neutral-200 dark:border-neutral-800 pt-5">
+          <p className="mb-3 text-xs text-inksoft">
+            {linked
+              ? "Deleting also removes this event from Google Calendar."
+              : "Deleting an event can't be undone."}
+          </p>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting || loading}
+            className="px-4 py-2 rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950 text-sm font-medium text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900 disabled:opacity-60"
+          >
+            {deleting ? "Deleting..." : "Delete event"}
+          </button>
+        </div>
       )}
     </FormPage>
   );
