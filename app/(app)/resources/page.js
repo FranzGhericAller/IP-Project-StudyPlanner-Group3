@@ -1,17 +1,12 @@
 import BackLink from "@/components/common/BackLink";
 
-// TODO: connect Drive / Notion / uploads. these are just sample items for now
+// TODO: connect Drive / uploads. these are just sample items for now
 // (the "resources" table in the db is already set up for this)
 const sampleResources = [
   {
     name: "Google Drive",
     color: "bg-blue-100",
     items: ["Web Dev - Lecture Notes.pdf", "Capstone Documentation.docx", "Mobile App UI Mockups (folder)"],
-  },
-  {
-    name: "Notion",
-    color: "bg-neutral-200",
-    items: ["Sprint Backlog", "Bug Tracker", "API Documentation (REST Services)"],
   },
   {
     name: "Local Files",

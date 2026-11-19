@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { taskSchema } from "@/lib/validators";
 import { getSubjectId } from "@/lib/subjects";
+import { pushTaskCreate } from "@/lib/pushTasks";
 import {
   getUserId,
   readJson,
@@ -28,7 +29,7 @@ export async function GET() {
   }
 }
 
-// POST /api/tasks: add a task
+// POST /api/tasks: add a task (also created in Google Tasks if connected)
 export async function POST(request) {
   const userId = await getUserId();
   if (!userId) return unauthorized();
@@ -45,6 +46,7 @@ export async function POST(request) {
     const task = await prisma.task.create({
       data: { userId, subjectId, title, notes: notes || null, priority, dueAt },
     });
+    await pushTaskCreate(userId, task.id); // never throws, a Google problem won't block saving
     return Response.json({ ok: true, task }, { status: 201 });
   } catch (e) {
     console.error("Create task failed:", e);

@@ -67,7 +67,7 @@ export default function LoginPage() {
         </>
       }
     >
-      <GoogleButton onClick={() => setNotice("Google sign-in isn't connected yet.")} />
+      <GoogleButton onClick={() => signIn("google", { callbackUrl: "/" })} />
 
       <div className="my-5 flex items-center gap-3 text-xs text-inksoft">
         <span className="h-px flex-1 bg-neutral-200" />

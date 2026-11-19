@@ -85,7 +85,7 @@ export default function RegisterPage() {
     >
       <GoogleButton
         label="Sign up with Google"
-        onClick={() => setNotice("Google sign-up isn't connected yet.")}
+        onClick={() => signIn("google", { callbackUrl: "/" })}
       />
 
       <div className="my-5 flex items-center gap-3 text-xs text-inksoft">

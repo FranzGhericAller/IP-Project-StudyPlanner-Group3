@@ -21,10 +21,6 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
               <span className="mt-1.5 h-2 w-2 rounded-full bg-rose-400" />
               Track tasks by priority and never miss a deadline.
             </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-1.5 h-2 w-2 rounded-full bg-emerald-400" />
-              Keep notes, Drive files, and Notion pages in one Resource Center.
-            </li>
           </ul>
         </div>
 

@@ -134,7 +134,7 @@ CREATE TABLE `resources` (
     `id` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
     `subjectId` VARCHAR(191) NULL,
-    `provider` ENUM('DRIVE', 'NOTION', 'LOCAL', 'LINK') NOT NULL,
+    `provider` ENUM('DRIVE', 'LOCAL', 'LINK') NOT NULL,
     `title` VARCHAR(191) NOT NULL,
     `url` TEXT NULL,
     `externalId` VARCHAR(191) NULL,

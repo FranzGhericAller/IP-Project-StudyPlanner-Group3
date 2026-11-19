@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { eventSchema } from "@/lib/validators";
 import { getSubjectId } from "@/lib/subjects";
+import { pushEventCreate } from "@/lib/pushEvents";
 import {
   getUserId,
   readJson,
@@ -27,7 +28,7 @@ export async function GET() {
   }
 }
 
-// POST /api/events: add an event
+// POST /api/events: add an event (also created in Google Calendar if connected)
 export async function POST(request) {
   const userId = await getUserId();
   if (!userId) return unauthorized();
@@ -49,9 +50,10 @@ export async function POST(request) {
         description: description || null,
         startAt,
         endAt,
-        source: "LOCAL", // made in the app (GCAL is for Google synced ones later)
+        source: "LOCAL", // made in the app. it still gets a googleEventId after the push
       },
     });
+    await pushEventCreate(userId, event.id); // never throws
     return Response.json({ ok: true, event }, { status: 201 });
   } catch (e) {
     console.error("Create event failed:", e);

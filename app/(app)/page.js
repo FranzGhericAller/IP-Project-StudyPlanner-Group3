@@ -23,13 +23,20 @@ export default async function DashboardPage() {
   const to = new Date(now.getTime() + 180 * DAY);
 
   // run all queries at once
-  const [openTasks, total, completed, upcoming, studyTotal, dueTasks, events] =
+  const [openTasks, doneTasks, total, completed, upcoming, studyTotal, dueTasks, events] =
     await Promise.all([
-      // sidebar list
+      // sidebar list (sorted below)
       prisma.task.findMany({
         where: { userId, status: "TODO" },
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 100,
+        include: { subject: { select: { name: true } } },
+      }),
+      // "Completed" section in the sidebar
+      prisma.task.findMany({
+        where: { userId, status: "DONE" },
+        orderBy: { completedAt: "desc" },
+        take: 15,
         include: { subject: { select: { name: true } } },
       }),
       // progress box
@@ -46,12 +53,25 @@ export default async function DashboardPage() {
       }),
     ]);
 
-  const tasks = openTasks.map((t) => ({
+  // soonest due date first, tasks without a due date after those (newest first)
+  const sortedOpen = [...openTasks].sort((a, b) => {
+    if (a.dueAt && b.dueAt) return a.dueAt - b.dueAt;
+    if (a.dueAt) return -1;
+    if (b.dueAt) return 1;
+    return b.createdAt - a.createdAt;
+  });
+
+  const toItem = (t) => ({
     id: t.id,
     name: t.title,
     subject: t.subject?.name ?? "",
     priority: t.priority,
-  }));
+    linked: Boolean(t.googleTaskId), // true = also in Google Tasks
+    dueAt: t.dueAt ? t.dueAt.toISOString() : null,
+  });
+
+  const tasks = sortedOpen.slice(0, 30).map(toItem);
+  const completedTasks = doneTasks.map(toItem);
 
   const stats = {
     total,
@@ -60,24 +80,35 @@ export default async function DashboardPage() {
     minutes: studyTotal._sum.durationMin ?? 0,
   };
 
-  // tasks + events in one list. dates -> ISO strings so they can be sent to the browser
+  // tasks + events in one list. dates -> ISO strings so they can be sent to the browser.
+  // refId = the real database id (the side panel uses it to load the details)
   const calendarItems = [
     ...dueTasks.map((t) => ({
       id: `task-${t.id}`,
+      refId: t.id,
       kind: "task",
       title: t.title,
       at: t.dueAt.toISOString(),
       priority: t.priority,
       done: t.status === "DONE",
+      linked: Boolean(t.googleTaskId),
     })),
     ...events.map((e) => ({
       id: `event-${e.id}`,
+      refId: e.id,
       kind: "event",
       title: e.title,
       at: e.startAt.toISOString(),
-      source: e.source === "GCAL" ? "gcal" : "local",
+      linked: Boolean(e.googleEventId),
     })),
   ];
 
-  return <Dashboard tasks={tasks} stats={stats} calendarItems={calendarItems} />;
+  return (
+    <Dashboard
+      tasks={tasks}
+      completedTasks={completedTasks}
+      stats={stats}
+      calendarItems={calendarItems}
+    />
+  );
 }

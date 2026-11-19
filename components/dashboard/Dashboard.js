@@ -5,9 +5,11 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import TaskList from "@/components/dashboard/TaskList";
 import SyncBar from "@/components/dashboard/SyncBar";
+import DetailPanel from "@/components/dashboard/DetailPanel";
 import UserAvatar from "@/components/common/UserAvatar";
 import { addDays } from "@/lib/calendar";
-import { eventStyles, priorityLabels, priorityStyles } from "@/lib/ui";
+import GoogleBadge from "@/components/common/GoogleBadge";
+import { eventStyle, priorityLabels, priorityStyles } from "@/lib/ui";
 
 // calendar depends on the browser's timezone, so only render it in the browser
 const Calendar = dynamic(() => import("@/components/dashboard/Calendar"), {
@@ -16,6 +18,24 @@ const Calendar = dynamic(() => import("@/components/dashboard/Calendar"), {
     <div className="bg-white rounded-lg border p-6 text-sm text-inksoft">Loading calendar...</div>
   ),
 });
+
+// on/off pill that shows or hides tasks or events on the calendar
+function FilterPill({ on, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+        on
+          ? "border-neutral-300 bg-white text-ink"
+          : "border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 line-through"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 function PriorityLegend() {
   return Object.keys(priorityStyles).map((p) => {
@@ -32,11 +52,14 @@ function PriorityLegend() {
 }
 
 // Main screen after login. Data comes from app/(app)/page.js
-export default function Dashboard({ tasks, stats, calendarItems }) {
+export default function Dashboard({ tasks, completedTasks, stats, calendarItems }) {
   const [view, setView] = useState("weekly"); // "weekly" | "monthly"
   const [cursor, setCursor] = useState(() => new Date()); // date the calendar is on
+  const [show, setShow] = useState({ tasks: true, events: true });
+  const [selected, setSelected] = useState(null); // { kind: "task" | "event", id } shown in the side panel
 
   const percent = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const visibleItems = calendarItems.filter((i) => (i.kind === "task" ? show.tasks : show.events));
 
   // move 1 week or 1 month back (-1) or forward (+1)
   function shift(direction) {
@@ -62,10 +85,6 @@ export default function Dashboard({ tasks, stats, calendarItems }) {
       <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold">Study Planner</h1>
-          <span className="flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Synced with Google Calendar
-          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -105,13 +124,16 @@ export default function Dashboard({ tasks, stats, calendarItems }) {
       <div className="flex flex-1 overflow-hidden">
         {/* sidebar */}
         <aside className="w-72 border-r bg-white p-5 space-y-6 overflow-y-auto">
-          <TaskList tasks={tasks} />
+          <TaskList
+            tasks={tasks}
+            completedTasks={completedTasks}
+            onOpen={(task) => setSelected({ kind: "task", id: task.id })}
+          />
 
           <div>
             <h2 className="font-semibold mb-3">Resource Center</h2>
             <ul className="space-y-2 text-sm">
               <li className="bg-blue-50 rounded-md px-3 py-2">Google Drive</li>
-              <li className="bg-neutral-100 rounded-md px-3 py-2">Notion</li>
               <li className="bg-orange-50 rounded-md px-3 py-2">Local Files</li>
             </ul>
             <Link href="/resources" className="block mt-3 text-center text-sm text-blue-600 hover:underline">
@@ -158,17 +180,25 @@ export default function Dashboard({ tasks, stats, calendarItems }) {
 
         {/* calendar */}
         <main className="flex-1 overflow-auto p-6">
-          <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-inksoft">
-            <span className="flex items-center gap-1.5">
-              <span className={`h-2 w-2 rounded-full ${eventStyles.gcal.dot}`} />
-              Synced GCal Event
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className={`h-2 w-2 rounded-full ${eventStyles.local.dot}`} />
-              My Event
-            </span>
-            <span>Task due:</span>
+          <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-inksoft">
+            <FilterPill on={show.tasks} onClick={() => setShow({ ...show, tasks: !show.tasks })}>
+              <span className="h-2.5 w-2.5 rounded-full border-2 border-current" />
+              Tasks
+            </FilterPill>
+            <FilterPill on={show.events} onClick={() => setShow({ ...show, events: !show.events })}>
+              <span className={`h-3 border-l-4 ${eventStyle.accent}`} />
+              Events
+            </FilterPill>
+
+            <span className="mx-1 h-4 w-px bg-neutral-200" />
+            <span>Task priority:</span>
             <PriorityLegend />
+
+            <span className="mx-1 h-4 w-px bg-neutral-200" />
+            <span className="flex items-center gap-1.5">
+              <GoogleBadge /> synced with Google
+            </span>
+
             <Link
               href="/events/new"
               className="ml-auto h-8 px-3 rounded-md border bg-white text-sm text-ink flex items-center hover:bg-neutral-50"
@@ -176,9 +206,22 @@ export default function Dashboard({ tasks, stats, calendarItems }) {
               + Add Event
             </Link>
           </div>
-          <Calendar items={calendarItems} view={view} cursor={cursor} />
+          <Calendar
+            items={visibleItems}
+            view={view}
+            cursor={cursor}
+            onSelect={(item) => setSelected({ kind: item.kind, id: item.refId })}
+          />
         </main>
       </div>
+
+      {selected && (
+        <DetailPanel
+          key={`${selected.kind}-${selected.id}`}
+          target={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
 
       <SyncBar />
     </div>

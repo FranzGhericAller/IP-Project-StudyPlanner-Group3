@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { eventStyles, priorityStyles } from "@/lib/ui";
+import GoogleBadge from "@/components/common/GoogleBadge";
+import { eventStyle, priorityStyles } from "@/lib/ui";
 import {
   HOURS,
   clampHour,
@@ -20,25 +21,35 @@ function timeLabel(date) {
   return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-// one task/event box. tasks use priority colors, events use source colors
-function Chip({ item, showTime }) {
-  const style = item.kind === "task" ? priorityStyles[item.priority] : eventStyles[item.source];
+// one task/event box.
+// task  = priority color + a ring (like the sidebar circle), no time
+// event = neutral gray + dark left bar + time
+// "G" badge = linked to Google. click the chip to open the details panel
+function Chip({ item, showTime, onSelect }) {
+  const isTask = item.kind === "task";
+  const style = isTask ? priorityStyles[item.priority] : eventStyle;
+
+  const className = `flex w-full min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-left hover:brightness-95 ${
+    style.bg
+  } ${style.border} ${style.text} ${isTask ? "" : `border-l-4 ${eventStyle.accent}`} ${
+    item.done ? "opacity-50 line-through" : ""
+  } ${showTime ? "text-[11px]" : ""}`;
+
+  const title = `${isTask ? "Task" : "Event"}: ${item.title} (${timeLabel(item.date)})`;
+
   return (
-    <div
-      title={`${item.title} (${timeLabel(item.date)})`}
-      className={`rounded-md border px-2 py-1 ${style.bg} ${style.border} ${style.text} ${
-        item.done ? "opacity-50 line-through" : ""
-      } ${showTime ? "truncate text-[11px]" : ""}`}
-    >
-      {showTime && <span className="font-medium">{timeLabel(item.date)} </span>}
-      {item.title}
-    </div>
+    <button type="button" onClick={() => onSelect?.(item)} title={title} className={className}>
+      {isTask && <span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-current" />}
+      {!isTask && showTime && <span className="shrink-0 font-medium">{timeLabel(item.date)}</span>}
+      <span className={`min-w-0 flex-1 ${showTime ? "truncate" : "break-words"}`}>{item.title}</span>
+      {item.linked && <GoogleBadge />}
+    </button>
   );
 }
 
 // items = due tasks + events, each w/ an ISO date in `at`
-// cursor = the date we're looking at
-export default function Calendar({ items, view, cursor }) {
+// cursor = the date we're looking at, onSelect = called when a chip is clicked
+export default function Calendar({ items, view, cursor, onSelect }) {
   const today = useMemo(() => new Date(), []);
 
   // ISO string -> Date, then group by day
@@ -53,7 +64,9 @@ export default function Calendar({ items, view, cursor }) {
       day: "numeric",
       year: "numeric",
     });
-    return <WeekGrid title={`${first} to ${last}`} days={days} byDay={byDay} today={today} />;
+    return (
+      <WeekGrid title={`${first} to ${last}`} days={days} byDay={byDay} today={today} onSelect={onSelect} />
+    );
   }
 
   return (
@@ -63,12 +76,13 @@ export default function Calendar({ items, view, cursor }) {
       month={cursor.getMonth()}
       byDay={byDay}
       today={today}
+      onSelect={onSelect}
     />
   );
 }
 
 // rows = hours, columns = days
-function WeekGrid({ title, days, byDay, today }) {
+function WeekGrid({ title, days, byDay, today, onSelect }) {
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
       <div className="px-4 py-3 border-b font-semibold">{title}</div>
@@ -93,7 +107,7 @@ function WeekGrid({ title, days, byDay, today }) {
             return (
               <div key={dayKey(d)} className="border-l p-1 min-h-[64px] space-y-1">
                 {slot.map((i) => (
-                  <Chip key={i.id} item={i} />
+                  <Chip key={i.id} item={i} onSelect={onSelect} />
                 ))}
               </div>
             );
@@ -105,7 +119,7 @@ function WeekGrid({ title, days, byDay, today }) {
 }
 
 // rows = weeks
-function MonthGrid({ title, weeks, month, byDay, today }) {
+function MonthGrid({ title, weeks, month, byDay, today, onSelect }) {
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
       <div className="px-4 py-3 border-b font-semibold">{title}</div>
@@ -136,7 +150,7 @@ function MonthGrid({ title, weeks, month, byDay, today }) {
                 </span>
                 <div className="mt-1 space-y-1">
                   {shown.map((i) => (
-                    <Chip key={i.id} item={i} showTime />
+                    <Chip key={i.id} item={i} showTime onSelect={onSelect} />
                   ))}
                   {extra > 0 && <div className="text-[11px] text-inksoft">+{extra} more</div>}
                 </div>
