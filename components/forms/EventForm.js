@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FormPage from "@/components/forms/FormPage";
 import Field from "@/components/forms/Field";
+import ExamCheckbox from "@/components/forms/ExamCheckbox";
 import { callApi } from "@/lib/callApi";
 import { inputClass } from "@/lib/ui";
 
@@ -24,6 +25,7 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
     startAt: toLocalInput(initial?.startAt),
     endAt: toLocalInput(initial?.endAt),
     description: initial?.description ?? "",
+    isExam: initial?.isExam ?? false,
   });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
@@ -60,6 +62,7 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
         title: form.title,
         subject: form.subject,
         description: form.description,
+        isExam: form.isExam,
         startAt: new Date(form.startAt).toISOString(),
         endAt: new Date(form.endAt).toISOString(),
       }
@@ -154,6 +157,12 @@ export default function EventForm({ eventId, initial, linked = false, allDay = f
           className={`${inputClass} dark:[color-scheme:dark] ${errors.endAt ? "border-rose-400 dark:border-rose-500" : ""}`}
         />
       </Field>
+
+      <ExamCheckbox
+        checked={form.isExam}
+        onChange={(isExam) => setForm({ ...form, isExam })}
+        hint="Shows in the Exam countdown on the Today page."
+      />
 
       <Field label="Description (optional)" htmlFor="description" error={errors.description}>
         <textarea

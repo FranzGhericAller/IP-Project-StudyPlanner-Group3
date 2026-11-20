@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `users` ADD COLUMN `weeklyGoalMin` INTEGER NOT NULL DEFAULT 600;

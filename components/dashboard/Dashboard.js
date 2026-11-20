@@ -12,6 +12,7 @@ import { addDays, sameDay } from "@/lib/calendar";
 import GoogleBadge from "@/components/common/GoogleBadge";
 import ResourceBadge, { resourceHref } from "@/components/common/ResourceBadge";
 import { eventStyle, priorityLabels, priorityStyles } from "@/lib/ui";
+import { formatMinutes } from "@/lib/format";
 
 const Calendar = dynamic(() => import("@/components/dashboard/Calendar"), {
   ssr: false,
@@ -60,6 +61,7 @@ export default function Dashboard({
   calendarItems,
   recentResources = [],
   resourceCount = 0,
+  weekly = { goalMin: 600, weekMinutes: 0, percent: 0, currentStreak: 0, studiedToday: false },
 }) {
   const [view, setView] = useState("weekly");
   const [cursor, setCursor] = useState(() => new Date());
@@ -116,6 +118,12 @@ export default function Dashboard({
         <h1 className="order-1 text-xl font-semibold">Study Planner</h1>
 
         <div className="order-2 md:order-3 flex items-center gap-3">
+          <Link
+            href="/today"
+            className="h-8 px-3 rounded-md border border-neutral-300 dark:border-neutral-700 text-sm text-ink flex items-center hover:bg-neutral-50 dark:hover:bg-neutral-800"
+          >
+            Today view
+          </Link>
           <div className={`hidden md:flex ${switchClass}`}>
             {viewButton("weekly", "Weekly")}
             {viewButton("monthly", "Monthly")}
@@ -227,10 +235,38 @@ export default function Dashboard({
 
           <div>
             <h2 className="font-semibold mb-3">Progress</h2>
+
+            {/* weekly goal + streak. details are on the Progress page */}
+            <div className="mb-4">
+              <div className="flex items-baseline justify-between text-sm">
+                <span className="text-inksoft">Weekly goal</span>
+                <span className="font-medium">
+                  {formatMinutes(weekly.weekMinutes)} / {formatMinutes(weekly.goalMin)}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800">
+                <div
+                  className={`h-1.5 rounded-full ${
+                    weekly.percent >= 100 ? "bg-emerald-500" : "bg-blue-600 dark:bg-blue-500"
+                  }`}
+                  style={{ width: `${Math.min(100, weekly.percent)}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-inksoft">
+                {weekly.currentStreak > 0
+                  ? `${weekly.currentStreak}-day streak${weekly.studiedToday ? "" : ". Study today to keep it."}`
+                  : "Study today to start a streak."}
+              </p>
+            </div>
+
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-inksoft">Hours logged</span>
                 <span className="font-medium">{(stats.minutes / 60).toFixed(1)}h</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-inksoft">Upcoming deadlines</span>
+                <span className="font-medium">{stats.upcoming}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-inksoft">Completed tasks</span>
@@ -238,14 +274,17 @@ export default function Dashboard({
                   {stats.completed} / {stats.total}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-inksoft">Upcoming deadlines</span>
-                <span className="font-medium">{stats.upcoming}</span>
-              </div>
               <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 mt-2">
                 <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
               </div>
             </div>
+
+            <Link
+              href="/progress"
+              className="block mt-3 text-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              View progress details
+            </Link>
             <Link
               href="/study/new"
               className="block mt-3 text-center text-sm border border-neutral-300 dark:border-neutral-700 rounded-[10px] py-1.5 text-inksoft hover:bg-neutral-50 dark:hover:bg-neutral-800"

@@ -39,12 +39,12 @@ export async function POST(request) {
 
   const parsed = taskSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error);
-  const { title, subject, dueAt, priority, notes } = parsed.data;
+  const { title, subject, dueAt, priority, notes, isExam } = parsed.data;
 
   try {
     const subjectId = await getSubjectId(userId, subject);
     const task = await prisma.task.create({
-      data: { userId, subjectId, title, notes: notes || null, priority, dueAt },
+      data: { userId, subjectId, title, notes: notes || null, priority, dueAt, isExam: isExam ?? false },
     });
     await pushTaskCreate(userId, task.id); // never throws, a Google problem won't block saving
     return Response.json({ ok: true, task }, { status: 201 });

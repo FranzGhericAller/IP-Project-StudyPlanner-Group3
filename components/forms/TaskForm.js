@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FormPage from "@/components/forms/FormPage";
 import Field from "@/components/forms/Field";
+import ExamCheckbox from "@/components/forms/ExamCheckbox";
 import { callApi } from "@/lib/callApi";
 import { inputClass, priorityLabels, priorityStyles } from "@/lib/ui";
 
@@ -24,6 +25,7 @@ export default function TaskForm({ taskId, initial }) {
     dueAt: toLocalInput(initial?.dueAt),
     priority: initial?.priority ?? "MED",
     notes: initial?.notes ?? "",
+    isExam: initial?.isExam ?? false,
   });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
@@ -124,6 +126,12 @@ export default function TaskForm({ taskId, initial }) {
           );
         })}
       </div>
+
+      <ExamCheckbox
+        checked={form.isExam}
+        onChange={(isExam) => setForm({ ...form, isExam })}
+        hint="Shows in the Exam countdown on the Today page. Needs a due date."
+      />
 
       <Field label="Notes" htmlFor="notes" error={errors.notes}>
         <textarea

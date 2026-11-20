@@ -14,6 +14,7 @@ const select = {
   darkMode: true,
   autoSync: true,
   autoSyncMinutes: true,
+  weeklyGoalMin: true,
 };
 
 // GET /api/settings

@@ -46,13 +46,20 @@ export async function PUT(request, { params }) {
 
   const parsed = eventSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error);
-  const { title, subject, description, startAt, endAt } = parsed.data;
+  const { title, subject, description, startAt, endAt, isExam } = parsed.data;
 
   try {
     const subjectId = await getSubjectId(userId, subject);
     const result = await prisma.event.updateMany({
       where: { id, userId, deletedAt: null },
-      data: { title, subjectId, description: description || null, startAt, endAt },
+      data: {
+        title,
+        subjectId,
+        description: description || null,
+        startAt,
+        endAt,
+        ...(isExam !== undefined && { isExam }),
+      },
     });
     if (result.count === 0) return notFound();
     await pushEventUpdate(userId, id);

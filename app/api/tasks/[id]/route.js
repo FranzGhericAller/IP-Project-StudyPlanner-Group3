@@ -77,13 +77,20 @@ export async function PUT(request, { params }) {
 
   const parsed = taskSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error);
-  const { title, subject, dueAt, priority, notes } = parsed.data;
+  const { title, subject, dueAt, priority, notes, isExam } = parsed.data;
 
   try {
     const subjectId = await getSubjectId(userId, subject);
     const result = await prisma.task.updateMany({
       where: { id, userId },
-      data: { title, subjectId, notes: notes || null, priority, dueAt },
+      data: {
+        title,
+        subjectId,
+        notes: notes || null,
+        priority,
+        dueAt,
+        ...(isExam !== undefined && { isExam }), // leave it alone if the client didn't send it
+      },
     });
     if (result.count === 0) return notFound();
     await pushTaskUpdate(userId, id);

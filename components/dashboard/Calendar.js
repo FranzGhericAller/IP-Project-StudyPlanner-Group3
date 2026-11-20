@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import GoogleBadge from "@/components/common/GoogleBadge";
 import { eventStyle, priorityStyles, studyStyle } from "@/lib/ui";
 import {
@@ -20,6 +20,16 @@ const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const BOX =
   "bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden";
 const LINE = "border-neutral-200 dark:border-neutral-700";
+
+// events only. all-day events are finished once their day is over, timed events once they end
+function isFinished(item, now) {
+  if (item.kind !== "event" || !item.endAt) return false;
+  if (item.allDay) {
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return new Date(item.at) < startOfToday;
+  }
+  return new Date(item.endAt) < now;
+}
 
 function timeLabel(date) {
   return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -42,7 +52,7 @@ function Chip({ item, showTime, comfortable, onSelect }) {
   } ${style.border} ${style.text} ${
     isTask || isStudy ? "" : `border-l-4 ${eventStyle.accent}`
   } ${isStudy ? "border-dashed" : "hover:brightness-95 dark:hover:brightness-110"} ${
-    item.done ? "opacity-50 line-through" : ""
+    item.done ? "opacity-50 line-through" : item.finished ? "opacity-60" : ""
   }`;
 
   if (isStudy) {
@@ -56,7 +66,9 @@ function Chip({ item, showTime, comfortable, onSelect }) {
     );
   }
 
-  const title = `${isTask ? "Task" : "Event"}: ${item.title} (${timeLabel(item.date)})`;
+  const title = `${isTask ? "Task" : "Event"}: ${item.title} (${timeLabel(item.date)})${
+    item.finished ? ", finished" : ""
+  }`;
 
   return (
     <button type="button" onClick={() => onSelect?.(item)} title={title} className={className}>
@@ -65,6 +77,14 @@ function Chip({ item, showTime, comfortable, onSelect }) {
       <span className={`min-w-0 flex-1 ${showTime && !comfortable ? "truncate" : "break-words"}`}>
         {item.title}
       </span>
+      {item.finished && (
+        <>
+          <span aria-hidden="true" className="shrink-0 text-[10px]">
+            ✓
+          </span>
+          <span className="sr-only">Finished</span>
+        </>
+      )}
       {item.linked && <GoogleBadge />}
     </button>
   );
@@ -75,7 +95,17 @@ function Chip({ item, showTime, comfortable, onSelect }) {
 export default function Calendar({ items, view, cursor, onSelect }) {
   const today = useMemo(() => new Date(), []);
 
-  const parsed = useMemo(() => items.map((i) => ({ ...i, date: new Date(i.at) })), [items]);
+  // "now" ticks every minute so an event gets marked finished while the page is open
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const parsed = useMemo(
+    () => items.map((i) => ({ ...i, date: new Date(i.at), finished: isFinished(i, now) })),
+    [items, now]
+  );
   const byDay = useMemo(() => groupByDay(parsed), [parsed]);
 
   if (view === "weekly") {

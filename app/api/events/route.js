@@ -38,7 +38,7 @@ export async function POST(request) {
 
   const parsed = eventSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error);
-  const { title, subject, description, startAt, endAt } = parsed.data;
+  const { title, subject, description, startAt, endAt, isExam } = parsed.data;
 
   try {
     const subjectId = await getSubjectId(userId, subject);
@@ -50,6 +50,7 @@ export async function POST(request) {
         description: description || null,
         startAt,
         endAt,
+        isExam: isExam ?? false,
         source: "LOCAL", // made in the app. it still gets a googleEventId after the push
       },
     });

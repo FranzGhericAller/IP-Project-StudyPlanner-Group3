@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Dashboard from "@/components/dashboard/Dashboard";
 import { resourceSelect } from "@/lib/resources";
+import { summarize } from "@/lib/progress";
 
 export const dynamic = "force-dynamic"; // always fresh data, no caching
 
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
   const to = new Date(now.getTime() + 180 * DAY);
 
   // run all queries at once
-  const [openTasks, doneTasks, total, completed, upcoming, studyTotal, dueTasks, events, recentRows, resourceCount, studyRows] =
+  const [openTasks, doneTasks, total, completed, upcoming, studyTotal, dueTasks, events, recentRows, resourceCount, studyRows, me, streakRows] =
     await Promise.all([
       // sidebar list (sorted below)
       prisma.task.findMany({
@@ -72,6 +73,19 @@ export default async function DashboardPage() {
           task: { select: { title: true } },
           subject: { select: { name: true } },
         },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true, weeklyGoalMin: true },
+      }),
+      prisma.studySession.findMany({
+        where: {
+          userId,
+          endedAt: { not: null },
+          durationMin: { gt: 0 },
+          startedAt: { gte: new Date(now.getTime() - 400 * DAY) },
+        },
+        select: { startedAt: true, durationMin: true },
       }),
     ]);
 
@@ -128,6 +142,8 @@ export default async function DashboardPage() {
       kind: "event",
       title: e.title,
       at: e.startAt.toISOString(),
+      endAt: e.endAt.toISOString(),
+      allDay: e.allDay,
       linked: Boolean(e.googleEventId),
     })),
         ...studyRows.map((s) => ({
@@ -140,6 +156,19 @@ export default async function DashboardPage() {
     })),
   ];
 
+  const summary = summarize({
+    sessions: streakRows,
+    tz: me?.timezone || "Asia/Manila",
+    goalMin: me?.weeklyGoalMin ?? 600,
+  });
+  const weekly = {
+    goalMin: summary.goalMin,
+    weekMinutes: summary.weekMinutes,
+    percent: summary.percent,
+    currentStreak: summary.currentStreak,
+    studiedToday: summary.studiedToday,
+  };
+
   return (
     <Dashboard
       tasks={tasks}
@@ -148,6 +177,7 @@ export default async function DashboardPage() {
       calendarItems={calendarItems}
       recentResources={recentResources}
       resourceCount={resourceCount}
+      weekly={weekly}
     />
   );
 }

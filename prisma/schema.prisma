@@ -55,6 +55,7 @@ model User {
   darkMode           Boolean @default(false)
   autoSync           Boolean @default(true)
   autoSyncMinutes    Int     @default(1)
+  weeklyGoalMin      Int     @default(600) // weekly study goal in minutes (10 h)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -144,6 +145,7 @@ model Task {
   status      TaskStatus @default(TODO)
   dueAt       DateTime?  @db.DateTime(3)
   completedAt DateTime?  @db.DateTime(3)
+  isExam      Boolean    @default(false) // shown in the Today page exam countdown
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   source           TaskSource @default(LOCAL)
@@ -171,6 +173,7 @@ model Event {
   startAt          DateTime    @db.DateTime(3)
   endAt            DateTime    @db.DateTime(3)
   allDay           Boolean     @default(false)
+  isExam           Boolean     @default(false) // local only, never sent to Google
   source           EventSource @default(LOCAL)
 
   // Google Calendar sync fields (NULL for local events; MySQL allows many NULLs in a unique index)
